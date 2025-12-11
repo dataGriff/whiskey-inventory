@@ -5,3 +5,65 @@ dist
 .env.test
 *.log
 coverage
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node modules
+node_modules/
+# Generated TypeScript client
+generated/
+
+# Node modules
+node_modules/
+# Generated files
+generated/
+openapitools.json
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+# IDE
+.idea/
+.vscode/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Prisma
+prisma/migrations/**/migration.sql.bak
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log

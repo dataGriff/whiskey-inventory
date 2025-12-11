@@ -25,14 +25,34 @@ const exampleList = {
 };
 
 export const handlers = [
-  rest.get('http://localhost:3000/api/whiskeys', (req, res, ctx) => {
+  rest.get('http://localhost:3000/api/whiskeys', (_req, res, ctx) => {
     return res(ctx.status(200), ctx.json(exampleList));
   }),
 
   rest.get('http://localhost:3000/api/whiskeys/:id', (req, res, ctx) => {
     const { id } = req.params;
     const item = exampleList.items.find((i) => i.id === id);
-    if (!item) return res(ctx.status(404), ctx.json({ code: 'NOT_FOUND', message: 'Not found' }));
+    if (!item) {
+      return res(
+        ctx.status(404),
+        ctx.json({ code: 'NOT_FOUND', message: 'Not found' })
+      );
+    }
     return res(ctx.status(200), ctx.json(item));
+  }),
+
+  rest.post('http://localhost:3000/api/whiskeys', (req, res, ctx) => {
+    const body = req.body as any;
+    const newWhiskey = {
+      id: 'generated-id-' + Date.now(),
+      ...body,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    return res(ctx.status(201), ctx.json(newWhiskey));
+  }),
+
+  rest.delete('http://localhost:3000/api/whiskeys/:id', (_req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 ];
