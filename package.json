@@ -1,0 +1,21 @@
+{
+  "name": "whiskey-inventory",
+  "version": "1.0.0",
+  "description": "Whiskey inventory management system",
+  "private": true,
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@prisma/client": "^5.0.0",
+    "prisma": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
