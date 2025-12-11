@@ -1,9 +1,4 @@
 {
-  "devDependencies": {
-    "prisma": "^5.21.0"
-  },
-  "dependencies": {
-    "@prisma/client": "^5.21.0"
   "name": "whiskey-inventory",
   "version": "1.0.0",
   "description": "Whiskey inventory management system",
@@ -17,10 +12,12 @@
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
+  "dependencies": {
+    "@prisma/client": "^5.21.0"
+  },
   "devDependencies": {
-    "@prisma/client": "^5.0.0",
     "@types/node": "^25.0.0",
-    "prisma": "^5.0.0",
+    "prisma": "^5.21.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   }
