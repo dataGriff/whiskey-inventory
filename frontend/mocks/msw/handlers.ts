@@ -1,5 +1,4 @@
-import { http, HttpResponse } from 'msw';
-import type { WhiskeyCreate } from '../../src/generated';
+import { rest } from 'msw';
 
 const exampleList = {
   items: [
@@ -28,34 +27,32 @@ const exampleList = {
 export const handlers = [
   rest.get('http://localhost:3000/api/whiskeys', (_req, res, ctx) => {
     return res(ctx.status(200), ctx.json(exampleList));
-  http.get('http://localhost:3000/api/whiskeys', () => {
-    return HttpResponse.json(exampleList);
   }),
 
-  http.get('http://localhost:3000/api/whiskeys/:id', ({ params }) => {
-    const { id } = params;
+  rest.get('http://localhost:3000/api/whiskeys/:id', (req, res, ctx) => {
+    const { id } = req.params;
     const item = exampleList.items.find((i) => i.id === id);
     if (!item) {
-      return HttpResponse.json(
-        { code: 'NOT_FOUND', message: 'Not found' },
-        { status: 404 }
+      return res(
+        ctx.status(404),
+        ctx.json({ code: 'NOT_FOUND', message: 'Not found' })
       );
     }
-    return HttpResponse.json(item);
+    return res(ctx.status(200), ctx.json(item));
   }),
 
-  http.post('http://localhost:3000/api/whiskeys', async ({ request }) => {
-    const body = await request.json() as WhiskeyCreate;
+  rest.post('http://localhost:3000/api/whiskeys', (req, res, ctx) => {
+    const body = req.body as any;
     const newWhiskey = {
-      id: crypto.randomUUID(),
+      id: 'generated-id-' + Date.now(),
       ...body,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    return HttpResponse.json(newWhiskey, { status: 201 });
+    return res(ctx.status(201), ctx.json(newWhiskey));
   }),
 
-  http.delete('http://localhost:3000/api/whiskeys/:id', () => {
-    return new HttpResponse(null, { status: 204 });
+  rest.delete('http://localhost:3000/api/whiskeys/:id', (_req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 ];

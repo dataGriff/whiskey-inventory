@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { WhiskeyListItem } from '../components/WhiskeyListItem';
-import { Whiskey } from '../types/whiskey';
+import type { Whiskey } from '../types/whiskey';
 
 const sampleWhiskeys: Whiskey[] = [
   {

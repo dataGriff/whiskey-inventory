@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WhiskeyCreate } from '../types/whiskey';
+import type { WhiskeyCreate } from '../types/whiskey';
 import { Input } from './Input';
 import { Button } from './Button';
 

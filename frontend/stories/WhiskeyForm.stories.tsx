@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { WhiskeyForm } from '../components/WhiskeyForm';
-import { WhiskeyCreate } from '../types/whiskey';
+import type { WhiskeyCreate } from '../types/whiskey';
 
 const meta: Meta<typeof WhiskeyForm> = {
   title: 'Whiskey/WhiskeyForm',

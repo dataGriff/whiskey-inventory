@@ -1,5 +1,5 @@
 import React from 'react';
-import { Whiskey } from '../types/whiskey';
+import type { Whiskey } from '../types/whiskey';
 
 export interface WhiskeyListItemProps {
   /**
