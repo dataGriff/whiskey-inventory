@@ -5,10 +5,36 @@ on:
     paths:
       - 'contracts/**'
       - '.github/workflows/**'
+      - 'frontend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'contracts/**'
 
 jobs:
-  validate-and-generate:
+  lint-contract:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral-cli@6.11.0
+
+      - name: Lint OpenAPI with Spectral
+        run: spectral lint contracts/openapi.yaml --fail-severity=error
+
+  generate-client:
+    runs-on: ubuntu-latest
+    needs: lint-contract
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,7 +45,7 @@ jobs:
           node-version: '18'
 
       - name: Install openapi-generator-cli
-        run: npm install -g @openapitools/openapi-generator-cli@2.4.32
+        run: npm install -g @openapitools/openapi-generator-cli@2.13.4
 
       - name: Validate OpenAPI (yaml parser)
         run: |
@@ -27,7 +53,144 @@ jobs:
 
       - name: Generate TypeScript client
         run: |
-          openapi-generator-cli generate -i contracts/openapi.yaml -g typescript-fetch -o generated/ts-client || true
+          openapi-generator-cli generate -i contracts/openapi.yaml -g typescript-fetch -o generated/ts-client
 
-      - name: List generated
-        run: ls -la generated/ts-client || true
+      - name: Create package.json for generated client
+        run: |
+          cat > generated/ts-client/package.json << 'EOF'
+          {
+            "name": "whiskey-inventory-client",
+            "version": "1.0.0",
+            "description": "TypeScript client for Whiskey Inventory API",
+            "main": "index.ts",
+            "scripts": {
+              "build": "tsc",
+              "type-check": "tsc --noEmit"
+            },
+            "dependencies": {
+              "whatwg-fetch": "^3.6.2"
+            },
+            "devDependencies": {
+              "@types/node": "^18.0.0",
+              "typescript": "^5.3.3"
+            }
+          }
+          EOF
+
+      - name: Create tsconfig.json for generated client
+        run: |
+          cat > generated/ts-client/tsconfig.json << 'EOF'
+          {
+            "compilerOptions": {
+              "target": "ES2020",
+              "module": "ESNext",
+              "lib": ["ES2020", "DOM"],
+              "declaration": true,
+              "outDir": "./dist",
+              "strict": true,
+              "esModuleInterop": true,
+              "skipLibCheck": true,
+              "forceConsistentCasingInFileNames": true,
+              "moduleResolution": "node",
+              "resolveJsonModule": true,
+              "isolatedModules": true
+            },
+            "include": ["**/*.ts"],
+            "exclude": ["node_modules", "dist"]
+          }
+          EOF
+
+      - name: Verify client generation
+        run: |
+          if [ ! -d "generated/ts-client" ]; then
+            echo "ERROR: Client generation failed - directory not created"
+            exit 1
+          fi
+          if [ ! -f "generated/ts-client/apis/index.ts" ]; then
+            echo "WARNING: Expected API files not found"
+          fi
+          ls -la generated/ts-client
+
+      - name: Validate generated client compiles
+        run: |
+          cd generated/ts-client
+          npm install
+          npx tsc --noEmit --skipLibCheck
+
+      - name: Upload generated client
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-client
+          path: generated/ts-client
+          retention-days: 7
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: generate-client
+    if: hashFiles('frontend/package.json') != ''
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Download generated client
+        uses: actions/download-artifact@v4
+        with:
+          name: ts-client
+          path: generated/ts-client
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --run
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+          retention-days: 7
+
+  preview-comment:
+    runs-on: ubuntu-latest
+    needs: [lint-contract, generate-client, build-frontend]
+    if: always() && github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lintStatus = '${{ needs.lint-contract.result }}';
+            const generateStatus = '${{ needs.generate-client.result }}';
+            const buildStatus = '${{ needs.build-frontend.result }}';
+            
+            let message = '## 🔍 Contract CI Results\n\n';
+            message += `- **OpenAPI Lint**: ${lintStatus === 'success' ? '✅ Passed' : '❌ Failed'}\n`;
+            message += `- **Client Generation**: ${generateStatus === 'success' ? '✅ Passed' : '❌ Failed'}\n`;
+            message += `- **Frontend Build**: ${buildStatus === 'success' ? '✅ Passed' : buildStatus === 'skipped' ? '⏭️ Skipped (no frontend)' : '❌ Failed'}\n`;
+            
+            if (lintStatus === 'success' && generateStatus === 'success') {
+              message += '\n✨ All contract validations passed!\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
