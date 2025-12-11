@@ -3,6 +3,15 @@ generated/
 
 # Node modules
 node_modules/
+# Generated files
+generated/
+openapitools.json
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Build outputs
 dist/
@@ -11,6 +20,11 @@ build/
 # IDE
 .idea/
 .vscode/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
@@ -18,3 +32,12 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
