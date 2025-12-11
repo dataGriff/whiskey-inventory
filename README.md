@@ -1,58 +1,110 @@
-# whiskey-inventory
-Whiskey inventory
+# Whiskey Inventory
 
-## API Documentation
+A contract-first whiskey inventory application with OpenAPI-driven development.
 
-The API contract is defined using OpenAPI 3.0.3 specification in `contracts/openapi.yaml`.
+## Overview
 
-### Viewing API Docs Locally
+This project follows a contract-first approach where the OpenAPI specification (`contracts/openapi.yaml`) serves as the single source of truth for:
+- Backend API implementation
+- Frontend client generation
+- Mock service workers for testing
+- API documentation
 
-You can view the interactive API documentation locally using Redoc:
+## Development Workflow
 
+### Contract CI Pipeline
+
+The project includes a comprehensive CI pipeline (`.github/workflows/contract-ci.yml`) that runs on every pull request touching contracts or workflows:
+
+#### 1. **OpenAPI Linting** (`lint-contract` job)
+- Uses [Spectral](https://stoplight.io/open-source/spectral) to lint the OpenAPI contract
+- Validates contract structure, operations, and best practices
+- Fails fast on errors (warnings allowed)
+- Configuration: `.spectral.yaml`
+
+#### 2. **Client Generation** (`generate-client` job)
+- Generates TypeScript client from OpenAPI spec
+- Validates YAML structure
+- Verifies generated files exist and compile
+- Uploads generated client as artifact for downstream jobs
+- Uses `@openapitools/openapi-generator-cli` v2.13.4
+
+#### 3. **Frontend Build** (`build-frontend` job)
+- **Conditional**: Only runs if `frontend/package.json` exists
+- Downloads generated TypeScript client
+- Installs dependencies and builds frontend
+- Runs unit tests
+- Uploads build artifacts
+
+#### 4. **PR Comment** (`preview-comment` job)
+- Posts CI results summary to pull request
+- Shows status of all validation steps
+- Helps reviewers quickly assess contract changes
+
+### Running Locally
+
+#### Lint OpenAPI Contract
 ```bash
-npx redoc-cli serve contracts/openapi.yaml
+npm install -g @stoplight/spectral-cli@6.11.0
+spectral lint contracts/openapi.yaml --fail-severity=error
 ```
 
-This will start a local server (typically at http://localhost:8080) with a beautifully rendered API documentation interface.
-
-Alternatively, you can use Swagger UI:
-
+#### Generate TypeScript Client
 ```bash
-npx swagger-ui-watcher contracts/openapi.yaml
+npm install -g @openapitools/openapi-generator-cli@2.13.4
+openapi-generator-cli generate -i contracts/openapi.yaml -g typescript-fetch -o generated/ts-client
 ```
 
-### Publishing API Docs
+#### Build Frontend (when available)
+```bash
+cd frontend
+npm install
+npm run build
+npm test
+```
 
-#### Option 1: GitHub Pages (Recommended)
+## Preview Deployments
 
-To publish the API docs to GitHub Pages:
+The project is configured for preview deployments on [Netlify](https://www.netlify.com/):
 
-1. Generate static HTML documentation:
-   ```bash
-   npx redoc-cli build contracts/openapi.yaml -o docs/index.html
-   ```
+- Configuration: `netlify.toml`
+- Base directory: `frontend`
+- Build command: `npm run build`
+- Publish directory: `dist`
 
-2. Commit the generated `docs/index.html` file
+Preview URLs are automatically generated for pull requests.
 
-3. Enable GitHub Pages in your repository settings:
-   - Go to Settings → Pages
-   - Set Source to "Deploy from a branch"
-   - Select the branch (e.g., `main`) and `/docs` folder
-   - Save
+## Project Structure
 
-4. Your API docs will be available at: `https://<username>.github.io/<repository>/`
+```
+.
+├── contracts/          # OpenAPI specifications
+│   └── openapi.yaml   # Main API contract
+├── frontend/          # Frontend application (when scaffolded)
+│   └── mocks/         # MSW mock handlers
+├── .github/
+│   └── workflows/
+│       └── contract-ci.yml  # CI pipeline
+├── .spectral.yaml     # OpenAPI linting rules
+└── netlify.toml       # Netlify deployment config
+```
 
-#### Option 2: Direct Link to Contract
+## Contributing
 
-You can also link directly to the OpenAPI YAML file and view it through external renderers:
-- Swagger Editor: `https://editor.swagger.io/?url=https://raw.githubusercontent.com/<username>/<repository>/main/contracts/openapi.yaml`
-- Redocly: `https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/<username>/<repository>/main/contracts/openapi.yaml`
+1. Make changes to `contracts/openapi.yaml`
+2. Open a pull request
+3. CI will automatically:
+   - Lint your contract changes
+   - Generate and validate TypeScript client
+   - Build and test frontend (if applicable)
+   - Comment on PR with results
+4. Review the CI feedback and iterate as needed
 
-### Contract Changes
+## CI/CD Features
 
-All changes to the API contract are tracked in [CONTRACTS_CHANGELOG.md](./CONTRACTS_CHANGELOG.md).
-
-When making changes to `contracts/openapi.yaml`, please:
-1. Update the `version` field in the OpenAPI spec
-2. Document the changes in `CONTRACTS_CHANGELOG.md` following the existing format
-3. Regenerate published documentation if using GitHub Pages
+✅ **Contract Validation**: Spectral linting ensures OpenAPI quality  
+✅ **Type Safety**: Generated TypeScript client validated for compilation  
+✅ **Fail Fast**: Linting errors block PRs immediately  
+✅ **Artifact Upload**: Generated clients and builds preserved  
+✅ **Matrix-Ready**: Job structure allows easy parallelization  
+✅ **Preview Deployments**: Netlify integration for PR previews
