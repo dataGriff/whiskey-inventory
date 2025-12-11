@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import type { WhiskeyCreate } from '../../src/generated';
 
 const exampleList = {
   items: [
@@ -42,7 +43,7 @@ export const handlers = [
   }),
 
   http.post('http://localhost:3000/api/whiskeys', async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
+    const body = await request.json() as WhiskeyCreate;
     const newWhiskey = {
       id: crypto.randomUUID(),
       ...body,
