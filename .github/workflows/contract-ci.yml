@@ -1,0 +1,33 @@
+name: Contract CI
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/**'
+      - '.github/workflows/**'
+
+jobs:
+  validate-and-generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install openapi-generator-cli
+        run: npm install -g @openapitools/openapi-generator-cli@2.4.32
+
+      - name: Validate OpenAPI (yaml parser)
+        run: |
+          python -c "import sys, yaml; yaml.safe_load(open('contracts/openapi.yaml'))"
+
+      - name: Generate TypeScript client
+        run: |
+          openapi-generator-cli generate -i contracts/openapi.yaml -g typescript-fetch -o generated/ts-client || true
+
+      - name: List generated
+        run: ls -la generated/ts-client || true
