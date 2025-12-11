@@ -19,15 +19,27 @@ jobs:
           node-version: '18'
 
       - name: Install openapi-generator-cli
-        run: npm install -g @openapitools/openapi-generator-cli@2.4.32
+        run: npm install -g @openapitools/openapi-generator-cli
 
       - name: Validate OpenAPI (yaml parser)
         run: |
           python -c "import sys, yaml; yaml.safe_load(open('contracts/openapi.yaml'))"
 
       - name: Generate TypeScript client
-        run: |
-          openapi-generator-cli generate -i contracts/openapi.yaml -g typescript-fetch -o generated/ts-client || true
+        run: ./scripts/generate-client.sh
 
-      - name: List generated
-        run: ls -la generated/ts-client || true
+      - name: Verify generated client
+        run: |
+          echo "Checking generated client structure..."
+          test -d generated/ts-client || (echo "❌ Output directory not created" && exit 1)
+          test -f generated/ts-client/apis/WhiskeysApi.ts || (echo "❌ WhiskeysApi.ts not found" && exit 1)
+          test -f generated/ts-client/models/Whiskey.ts || (echo "❌ Whiskey model not found" && exit 1)
+          echo "✅ Generated client structure looks good"
+          
+      - name: List generated files
+        run: |
+          echo "Generated API files:"
+          ls -la generated/ts-client/apis/ || true
+          echo ""
+          echo "Generated model files:"
+          ls -la generated/ts-client/models/ || true

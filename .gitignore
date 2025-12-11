@@ -1,0 +1,20 @@
+# Generated TypeScript client
+generated/
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
