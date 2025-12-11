@@ -23,8 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
 
       - name: Install Spectral
         run: npm install -g @stoplight/spectral-cli@6.11.0
@@ -115,7 +113,7 @@ jobs:
         run: |
           cd generated/ts-client
           npm install
-          npx tsc --noEmit --skipLibCheck
+          npx tsc --noEmit
 
       - name: Upload generated client
         uses: actions/upload-artifact@v4
@@ -168,7 +166,7 @@ jobs:
       - name: Run frontend tests
         if: steps.check-frontend.outputs.exists == 'true'
         working-directory: frontend
-        run: npm test -- --run
+        run: npm test
 
       - name: Upload build artifacts
         if: steps.check-frontend.outputs.exists == 'true'
