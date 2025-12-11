@@ -1,4 +1,5 @@
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { WhiskeysService } from '../generated';
 import type { WhiskeyCreate } from '../generated';
@@ -29,25 +30,19 @@ export default function WhiskeyCreatePage() {
     setError(null);
 
     try {
-      // Clean up the form data
-      const submitData: any = { ...formData };
+      // Clean up the form data - remove empty strings
+      const submitData: WhiskeyCreate = { ...formData };
       
-      // Remove empty strings and convert to appropriate types
-      Object.keys(submitData).forEach((key) => {
-        if (submitData[key] === '') {
-          submitData[key] = undefined;
-        }
-      });
-
       const created = await WhiskeysService.createWhiskey(submitData);
       navigate(`/whiskeys/${created.id}`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to create whiskey');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create whiskey';
+      setError(errorMessage);
       setSubmitting(false);
     }
   };
 
-  const handleChange = (field: keyof WhiskeyCreate, value: any) => {
+  const handleChange = (field: keyof WhiskeyCreate, value: WhiskeyCreate[keyof WhiskeyCreate]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -206,7 +201,7 @@ export default function WhiskeyCreatePage() {
           </label>
           <input
             type="url"
-            value={formData.imageUrl}
+            value={formData.imageUrl || ''}
             onChange={(e) => handleChange('imageUrl', e.target.value)}
             style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
           />
@@ -237,7 +232,7 @@ export default function WhiskeyCreatePage() {
             Notes
           </label>
           <textarea
-            value={formData.notes}
+            value={formData.notes || ''}
             onChange={(e) => handleChange('notes', e.target.value)}
             rows={4}
             style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}

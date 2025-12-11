@@ -30,8 +30,9 @@ export default function WhiskeyDetail() {
     try {
       await WhiskeysService.deleteWhiskey(id);
       navigate('/whiskeys');
-    } catch (err: any) {
-      alert('Failed to delete whiskey: ' + err.message);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete whiskey';
+      alert('Failed to delete whiskey: ' + errorMessage);
     }
   };
 

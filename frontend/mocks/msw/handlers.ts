@@ -42,10 +42,10 @@ export const handlers = [
   }),
 
   http.post('http://localhost:3000/api/whiskeys', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     const newWhiskey = {
       id: crypto.randomUUID(),
-      ...(body as any),
+      ...body,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
