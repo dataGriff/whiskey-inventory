@@ -52,4 +52,8 @@ export const handlers = [
     };
     return HttpResponse.json(newWhiskey, { status: 201 });
   }),
+
+  http.delete('http://localhost:3000/api/whiskeys/:id', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
