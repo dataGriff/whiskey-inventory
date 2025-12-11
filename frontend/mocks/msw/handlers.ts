@@ -27,6 +27,7 @@ export const handlers = [
       items: inMemoryDb,
       meta: { total: inMemoryDb.length, limit: 20, offset: 0 },
     };
+  rest.get('http://localhost:3000/api/whiskeys', (_req, res, ctx) => {
     return res(ctx.status(200), ctx.json(exampleList));
   }),
 
@@ -41,6 +42,20 @@ export const handlers = [
     const body = await req.json();
     const newWhiskey = {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+    const item = exampleList.items.find((i) => i.id === id);
+    if (!item) {
+      return res(
+        ctx.status(404),
+        ctx.json({ code: 'NOT_FOUND', message: 'Not found' })
+      );
+    }
+    return res(ctx.status(200), ctx.json(item));
+  }),
+
+  rest.post('http://localhost:3000/api/whiskeys', (req, res, ctx) => {
+    const body = req.body as any;
+    const newWhiskey = {
+      id: 'generated-id-' + Date.now(),
       ...body,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -87,6 +102,10 @@ export const handlers = [
     if (index === -1) return res(ctx.status(404), ctx.json({ code: 'NOT_FOUND', message: 'Not found' }));
     
     inMemoryDb.splice(index, 1);
+    return res(ctx.status(201), ctx.json(newWhiskey));
+  }),
+
+  rest.delete('http://localhost:3000/api/whiskeys/:id', (_req, res, ctx) => {
     return res(ctx.status(204));
   }),
 ];
