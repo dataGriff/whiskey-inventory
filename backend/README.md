@@ -6,6 +6,37 @@ Backend API for the Whiskey Inventory application, built with Express.js, TypeSc
 
 - Node.js 18+ and npm
 - PostgreSQL database (local or remote)
+- Docker (optional, for easy database setup)
+
+## Quick Start with Docker
+
+The fastest way to get started:
+
+```bash
+# 1. Start PostgreSQL with Docker
+docker-compose up -d postgres
+
+# 2. Install dependencies
+npm install
+
+# 3. Copy and configure environment
+cp .env.example .env
+# Edit .env if needed (default works with docker-compose)
+
+# 4. Generate Prisma Client
+npm run prisma:generate
+
+# 5. Run migrations
+npm run prisma:migrate
+
+# 6. (Optional) Seed database
+npm run prisma:seed
+
+# 7. Start development server
+npm run dev
+```
+
+The API will be available at http://localhost:3000
 
 ## Setup
 
@@ -104,6 +135,25 @@ All endpoints follow the OpenAPI specification defined in `contracts/openapi.yam
 
 ## Testing
 
+### Prerequisites
+
+Tests require a PostgreSQL database. The easiest way is to use Docker:
+
+```bash
+# Start test database
+docker-compose up -d postgres-test
+
+# Wait for database to be ready
+sleep 5
+
+# Run migrations on test database
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/whiskey_inventory_test?schema=public" npx prisma migrate deploy --schema=../prisma/schema.prisma
+```
+
+Alternatively, copy `.env.test` to `.env` and update with your test database URL.
+
+### Running Tests
+
 Run all tests:
 
 ```bash
@@ -122,7 +172,12 @@ Run tests with coverage:
 npm run test:coverage
 ```
 
-**Note:** Tests require a test database. Set `DATABASE_URL` to a test database URL before running tests.
+### Clean Up
+
+```bash
+# Stop test database
+docker-compose down
+```
 
 ## Prisma Commands
 
