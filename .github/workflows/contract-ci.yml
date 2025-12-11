@@ -46,16 +46,19 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install openapi-generator-cli
-        run: npm install -g @openapitools/openapi-generator-cli@2.13.4
-
       - name: Validate OpenAPI (yaml parser)
         run: |
           python -c "import sys, yaml; yaml.safe_load(open('contracts/openapi.yaml'))"
 
-      - name: Generate TypeScript client
+      - name: Generate TypeScript client using Docker
         run: |
-          openapi-generator-cli generate -i contracts/openapi.yaml -g typescript-fetch -o generated/ts-client
+          docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli:v7.2.0 generate \
+            -i /local/contracts/openapi.yaml \
+            -g typescript-fetch \
+            -o /local/generated/ts-client
+          
+          # Fix file permissions created by Docker
+          sudo chown -R $(id -u):$(id -g) generated/ts-client
 
       - name: Create package.json for generated client
         run: |
