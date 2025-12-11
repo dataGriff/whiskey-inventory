@@ -48,6 +48,9 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install openapi-generator-cli
+        run: npm install -g @openapitools/openapi-generator-cli
+
       - name: Validate OpenAPI (yaml parser)
         run: |
           python -c "import sys, yaml; yaml.safe_load(open('contracts/openapi.yaml'))"
