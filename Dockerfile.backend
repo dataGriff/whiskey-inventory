@@ -1,0 +1,66 @@
+# Multi-stage build for backend
+FROM node:18-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+# Copy package files
+COPY backend/package.json backend/package-lock.json* ./backend/
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN cd backend && npm ci --only=production && npm cache clean --force
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+
+# Copy package files and install all dependencies (including devDependencies)
+COPY backend/package.json backend/package-lock.json* ./backend/
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+
+RUN cd backend && npm ci
+
+# Copy source code
+COPY backend ./backend/
+COPY prisma ./prisma/
+COPY tsconfig.json ./
+
+# Generate Prisma client
+RUN cd backend && npx prisma generate
+
+# Build the application
+RUN cd backend && npm run build
+
+# Production image, copy all the files and run the app
+FROM base AS runner
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 whiskey-api
+
+# Copy the built application
+COPY --from=builder --chown=whiskey-api:nodejs /app/backend/dist ./backend/dist
+COPY --from=builder --chown=whiskey-api:nodejs /app/backend/package.json ./backend/
+COPY --from=deps --chown=whiskey-api:nodejs /app/backend/node_modules ./backend/node_modules
+COPY --from=builder --chown=whiskey-api:nodejs /app/prisma ./prisma/
+
+USER whiskey-api
+
+EXPOSE 3001
+
+ENV NODE_ENV=production
+ENV PORT=3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+CMD ["node", "backend/dist/index.js"]

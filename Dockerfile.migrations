@@ -1,0 +1,43 @@
+# Database migration and seeding service
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm ci
+
+# Install wait-for-it script for database readiness
+RUN apk add --no-cache bash curl
+RUN curl -o /usr/local/bin/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it
+
+# Copy migration and seed scripts
+COPY scripts ./scripts/
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Create entrypoint script
+COPY <<EOF /entrypoint.sh
+#!/bin/bash
+set -e
+
+echo "Waiting for database to be ready..."
+wait-for-it postgres:5432 --timeout=60 --strict -- echo "Database is ready"
+
+echo "Running database migrations..."
+npx prisma migrate deploy
+
+echo "Seeding database..."
+npx prisma db seed || echo "Seeding completed or failed (continuing...)"
+
+echo "Migration and seeding completed"
+EOF
+
+RUN chmod +x /entrypoint.sh
+
+CMD ["/entrypoint.sh"]

@@ -1,44 +1,38 @@
-# whiskey-inventory
-
-Whiskey inventory API with contract-first design and E2E testing.
-
-## Repository Structure
-
-- **`/contracts`** - OpenAPI specification for the Whiskey API
-- **`/frontend/mocks`** - MSW (Mock Service Worker) handlers for browser and testing
-- **`/tests/e2e`** - Playwright E2E tests for CRUD operations
-- **`/prisma`** - Database schema
-
-## E2E Testing
-
-End-to-end tests validate the full CRUD flow for whiskey resources.
-
-### Run E2E Tests Locally
-
-```bash
-cd tests/e2e
-npm install
-npm run test:e2e
-```
-
-Tests run against a local MSW mock server (no backend required).
-
-### Run Against Preview/Staging
-
-```bash
-PREVIEW_URL=https://your-preview-url.com npm run test:e2e
-```
-
-For more details, see [tests/e2e/README.md](tests/e2e/README.md)
 # Whiskey Inventory
 
-A contract-first whiskey inventory management system with OpenAPI specifications, frontend React application, and MSW mocking.
+A contract-first whiskey inventory management system with OpenAPI specifications, React frontend, Node.js backend, and Docker containerization.
+
+## Quick Start with Docker 🐳
+
+The easiest way to run the entire application:
+
+```bash
+# Clone and navigate to the project
+git clone <repository-url>
+cd whiskey-inventory
+
+# Start all services with Docker
+./docker.sh
+
+# Or manually:
+docker compose up -d --build
+```
+
+After startup, access:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Database**: localhost:5432
+
+For detailed Docker documentation, see [DOCKER.md](DOCKER.md).
 
 ## Project Structure
 
-- **`contracts/`** - OpenAPI 3.0 specification for the Whiskey Inventory API
-- **`frontend/`** - React + TypeScript + Vite frontend application with generated API client
-- **`prisma/`** - Database schema (if applicable)
+- **`contracts/`** - OpenAPI 3.0 specification (single source of truth)
+- **`frontend/`** - React + TypeScript + Vite frontend application  
+- **`backend/`** - Node.js + Express + Prisma API server
+- **`prisma/`** - Database schema and migrations
+- **`tests/e2e/`** - Playwright end-to-end tests
+- **`infra/`** - Infrastructure configuration
 
 ## Quick Start
 

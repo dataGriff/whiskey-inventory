@@ -1,0 +1,31 @@
+# Docker Compose override for development
+# This file is automatically loaded by docker-compose
+# and can be used to override default configurations
+
+services:
+  # Development overrides for backend
+  backend:
+    environment:
+      - NODE_ENV=development
+    # Uncomment for hot reloading in development:
+    # volumes:
+    #   - ./backend/src:/app/backend/src:ro
+    # command: npm run dev
+
+  # Development overrides for frontend  
+  frontend:
+    # Uncomment for development builds:
+    # build:
+    #   target: builder
+    # command: npm run dev
+    # ports:
+    #   - "3000:5173"
+
+  # Development database access (uncomment if needed)
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - whiskey-network
