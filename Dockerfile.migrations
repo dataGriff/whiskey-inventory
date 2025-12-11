@@ -3,6 +3,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install OpenSSL and other dependencies needed for Prisma
+RUN apk add --no-cache bash curl openssl openssl-dev
+
 # Copy package files and install dependencies
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
@@ -11,7 +14,6 @@ COPY prisma ./prisma/
 RUN npm ci
 
 # Install wait-for-it script for database readiness
-RUN apk add --no-cache bash curl
 RUN curl -o /usr/local/bin/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
 RUN chmod +x /usr/local/bin/wait-for-it
 
@@ -20,6 +22,10 @@ COPY scripts ./scripts/
 
 # Generate Prisma client
 RUN npx prisma generate
+
+# Set environment variables for Prisma
+ENV PRISMA_CLI_BINARY_TARGETS=linux-musl
+ENV OPENSSL_CONF=/dev/null
 
 # Create entrypoint script
 COPY <<EOF /entrypoint.sh

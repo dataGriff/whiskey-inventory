@@ -31,6 +31,8 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-whiskey_user}:${POSTGRES_PASSWORD:-whiskey_dev_password}@postgres:5432/${POSTGRES_DB:-whiskey_inventory}
+      PRISMA_CLI_BINARY_TARGETS: linux-musl
+      OPENSSL_CONF: /dev/null
     volumes:
       - ./prisma:/app/prisma:ro
     networks:
