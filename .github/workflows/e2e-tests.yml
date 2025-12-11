@@ -21,6 +21,8 @@ jobs:
   e2e-local:
     name: E2E Tests (Local MSW)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout
@@ -56,6 +58,8 @@ jobs:
   e2e-preview:
     name: E2E Tests (Preview URL)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.preview_url != ''
     
     steps:
