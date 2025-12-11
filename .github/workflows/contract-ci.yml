@@ -26,6 +26,8 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install openapi-generator-cli
+        run: npm install -g @openapitools/openapi-generator-cli
       - name: Install Spectral
         run: npm install -g @stoplight/spectral-cli@6.11.0
 
@@ -46,10 +48,31 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install openapi-generator-cli
+        run: npm install -g @openapitools/openapi-generator-cli
+
       - name: Validate OpenAPI (yaml parser)
         run: |
           python -c "import sys, yaml; yaml.safe_load(open('contracts/openapi.yaml'))"
 
+      - name: Generate TypeScript client
+        run: ./scripts/generate-client.sh
+
+      - name: Verify generated client
+        run: |
+          echo "Checking generated client structure..."
+          test -d generated/ts-client || (echo "❌ Output directory not created" && exit 1)
+          test -f generated/ts-client/src/apis/WhiskeysApi.ts || (echo "❌ WhiskeysApi.ts not found" && exit 1)
+          test -f generated/ts-client/src/models/Whiskey.ts || (echo "❌ Whiskey model not found" && exit 1)
+          echo "✅ Generated client structure looks good"
+          
+      - name: List generated files
+        run: |
+          echo "Generated API files:"
+          ls -la generated/ts-client/src/apis/ || true
+          echo ""
+          echo "Generated model files:"
+          ls -la generated/ts-client/src/models/ || true
       - name: Generate TypeScript client using Docker
         run: |
           docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli:v7.2.0 generate \

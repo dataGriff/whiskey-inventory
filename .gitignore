@@ -1,3 +1,8 @@
+# Generated TypeScript client
+generated/
+
+# Node modules
+node_modules/
 # Generated files
 generated/
 openapitools.json
@@ -11,6 +16,10 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
+
+# IDE
+.idea/
+.vscode/
 *.tsbuildinfo
 
 # IDE
