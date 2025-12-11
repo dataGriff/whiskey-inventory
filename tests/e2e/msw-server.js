@@ -59,7 +59,7 @@ app.get('/api/whiskeys/:id', (req, res) => {
 app.post('/api/whiskeys', (req, res) => {
   const body = req.body;
   const newWhiskey = {
-    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     ...body,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

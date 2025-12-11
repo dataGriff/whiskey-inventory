@@ -40,7 +40,7 @@ export const handlers = [
   rest.post('http://localhost:3000/api/whiskeys', async (req, res, ctx) => {
     const body = await req.json();
     const newWhiskey = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       ...body,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
