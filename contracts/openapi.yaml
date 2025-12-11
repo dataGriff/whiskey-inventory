@@ -1,0 +1,466 @@
+openapi: 3.0.3
+info:
+  title: Whiskey Inventory API
+  description: |
+    Contract-first OpenAPI v3 spec for a simple Whiskey Inventory CRUD API.
+    Use this as the single source of truth for frontend mocks, backend stubs, and client generation.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:3000/api
+    description: Local development / mock server
+tags:
+  - name: whiskeys
+    description: Whiskey CRUD operations
+paths:
+  /whiskeys:
+    get:
+      tags:
+        - whiskeys
+      summary: List whiskeys
+      description: Returns a paginated list of whiskeys. Supports basic filtering, searching and sorting.
+      operationId: listWhiskeys
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: q
+          in: query
+          description: Fulltext search across name, distillery and notes
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter by tag (single). Multiple allowed by repeating the parameter.
+          schema:
+            type: string
+        - name: region
+          in: query
+          description: Filter by region
+          schema:
+            type: string
+        - name: min_abv
+          in: query
+          description: Minimum ABV filter (inclusive)
+          schema:
+            type: number
+            format: float
+        - name: max_abv
+          in: query
+          description: Maximum ABV filter (inclusive)
+          schema:
+            type: number
+            format: float
+        - name: sort
+          in: query
+          description: Sort expression, e.g. "name:asc" or "age:desc"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A paginated list of whiskeys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhiskeyListResponse'
+              examples:
+                default:
+                  value:
+                    items:
+                      - id: "b3e1a6a6-1c6b-4c3f-90d1-3f1a6b0a1111"
+                        name: "Glen Example 12"
+                        distillery: "Glen Example Distillery"
+                        region: "Speyside"
+                        age: 12
+                        abv: 43
+                        size_ml: 700
+                        quantity: 3
+                        purchaseDate: "2024-08-01"
+                        priceCents: 4999
+                        notes: "Light, fruity, honeyed"
+                        imageUrl: "https://example.com/images/glen-example-12.jpg"
+                        tags: ["speyside", "single-malt"]
+                        rating: 4.2
+                        createdAt: "2024-08-01T12:00:00Z"
+                        updatedAt: "2024-08-02T09:00:00Z"
+                    meta:
+                      total: 1
+                      limit: 20
+                      offset: 0
+        "400":
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - whiskeys
+      summary: Create a new whiskey
+      operationId: createWhiskey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhiskeyCreate'
+            examples:
+              newWhiskey:
+                value:
+                  name: "Glen Example 12"
+                  distillery: "Glen Example Distillery"
+                  region: "Speyside"
+                  age: 12
+                  abv: 43
+                  size_ml: 700
+                  quantity: 1
+                  purchaseDate: "2024-08-01"
+                  priceCents: 4999
+                  notes: "Light, fruity"
+                  imageUrl: "https://example.com/images/glen-example-12.jpg"
+                  tags: ["speyside", "single-malt"]
+                  rating: 4.0
+      responses:
+        "201":
+          description: Created whiskey resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Whiskey'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "409":
+          $ref: '#/components/responses/Conflict'
+  /whiskeys/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: Whiskey resource id (UUID)
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - whiskeys
+      summary: Get a single whiskey
+      operationId: getWhiskey
+      responses:
+        "200":
+          description: Whiskey found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Whiskey'
+              examples:
+                example:
+                  $ref: '#/components/examples/ExampleWhiskey'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - whiskeys
+      summary: Replace a whiskey (full update)
+      operationId: replaceWhiskey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhiskeyCreate'
+      responses:
+        "200":
+          description: Updated whiskey resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Whiskey'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - whiskeys
+      summary: Partially update a whiskey
+      operationId: updateWhiskey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhiskeyUpdate'
+      responses:
+        "200":
+          description: Updated whiskey resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Whiskey'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - whiskeys
+      summary: Delete a whiskey
+      operationId: deleteWhiskey
+      responses:
+        "204":
+          description: Deleted successfully (no content)
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+components:
+  responses:
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict (e.g., duplicate)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  examples:
+    ExampleWhiskey:
+      summary: Example whiskey
+      value:
+        id: "b3e1a6a6-1c6b-4c3f-90d1-3f1a6b0a1111"
+        name: "Glen Example 12"
+        distillery: "Glen Example Distillery"
+        region: "Speyside"
+        age: 12
+        abv: 43
+        size_ml: 700
+        quantity: 3
+        purchaseDate: "2024-08-01"
+        priceCents: 4999
+        notes: "Light, fruity, honeyed"
+        imageUrl: "https://example.com/images/glen-example-12.jpg"
+        tags: ["speyside", "single-malt"]
+        rating: 4.2
+        createdAt: "2024-08-01T12:00:00Z"
+        updatedAt: "2024-08-02T09:00:00Z"
+
+  schemas:
+    Whiskey:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "b3e1a6a6-1c6b-4c3f-90d1-3f1a6b0a1111"
+        name:
+          type: string
+          example: "Glen Example 12"
+        distillery:
+          type: string
+          example: "Glen Example Distillery"
+        region:
+          type: string
+          example: "Speyside"
+        age:
+          type: integer
+          nullable: true
+          example: 12
+        abv:
+          type: number
+          format: float
+          nullable: true
+          example: 43
+        size_ml:
+          type: integer
+          description: Bottle size in milliliters
+          example: 700
+        quantity:
+          type: integer
+          example: 3
+        purchaseDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-08-01"
+        priceCents:
+          type: integer
+          description: Price stored in cents to avoid floating point
+          example: 4999
+        notes:
+          type: string
+          nullable: true
+          example: "Light, fruity, honeyed"
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["speyside", "single-malt"]
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          nullable: true
+          example: 4.2
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WhiskeyCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        distillery:
+          type: string
+        region:
+          type: string
+        age:
+          type: integer
+          nullable: true
+        abv:
+          type: number
+          format: float
+          nullable: true
+        size_ml:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          nullable: true
+          default: 1
+        purchaseDate:
+          type: string
+          format: date
+          nullable: true
+        priceCents:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          nullable: true
+
+    WhiskeyUpdate:
+      type: object
+      description: Partial update. All fields optional.
+      properties:
+        name:
+          type: string
+        distillery:
+          type: string
+        region:
+          type: string
+        age:
+          type: integer
+        abv:
+          type: number
+          format: float
+        size_ml:
+          type: integer
+        quantity:
+          type: integer
+        purchaseDate:
+          type: string
+          format: date
+        priceCents:
+          type: integer
+        notes:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+        tags:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+
+    WhiskeyListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Whiskey'
+        meta:
+          $ref: '#/components/schemas/Pagination'
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 123
+        limit:
+          type: integer
+          example: 20
+        offset:
+          type: integer
+          example: 0
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "BAD_REQUEST"
+        message:
+          type: string
+          example: "Validation failed for field 'name': must not be empty"
+        details:
+          type: object
+          additionalProperties: true
+
+security: [] # no auth required for MVP; add securitySchemes here later
