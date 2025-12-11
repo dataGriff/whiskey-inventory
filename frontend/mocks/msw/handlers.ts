@@ -25,7 +25,7 @@ const exampleList = {
 };
 
 export const handlers = [
-  rest.get('http://localhost:3000/api/whiskeys', (req, res, ctx) => {
+  rest.get('http://localhost:3000/api/whiskeys', (_req, res, ctx) => {
     return res(ctx.status(200), ctx.json(exampleList));
   }),
 
