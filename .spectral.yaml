@@ -1,0 +1,24 @@
+extends: spectral:oas
+rules:
+  # Ensure operations have operationId
+  operation-operationId: error
+  
+  # Ensure operations have descriptions
+  operation-description: warn
+  
+  # Ensure operations have tags
+  operation-tags: warn
+  
+  # Ensure consistent success responses
+  operation-success-response: error
+  
+  # Info section rules
+  info-contact: off
+  info-description: error
+  info-license: off
+  
+  # Tag descriptions
+  openapi-tags: warn
+  
+  # No $ref siblings
+  no-$ref-siblings: error
