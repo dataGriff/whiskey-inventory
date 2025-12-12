@@ -152,7 +152,8 @@ export const replaceWhiskey = async (
       data.purchaseDate = new Date(data.purchaseDate);
     }
 
-    // Prisma update will throw P2025 error if record not found
+    // Prisma's update() will throw PrismaClientKnownRequestError with code P2025
+    // if the record doesn't exist. The error handler will convert this to a 404 response.
     const whiskey = await prisma.whiskey.update({
       where: { id },
       data
@@ -182,7 +183,8 @@ export const updateWhiskey = async (
       data.purchaseDate = new Date(data.purchaseDate);
     }
 
-    // Prisma update will throw P2025 error if record not found
+    // Prisma's update() will throw PrismaClientKnownRequestError with code P2025
+    // if the record doesn't exist. The error handler will convert this to a 404 response.
     const whiskey = await prisma.whiskey.update({
       where: { id },
       data
@@ -206,7 +208,8 @@ export const deleteWhiskey = async (
   try {
     const { id } = req.params;
 
-    // Prisma delete will throw P2025 error if record not found
+    // Prisma's delete() will throw PrismaClientKnownRequestError with code P2025
+    // if the record doesn't exist. The error handler will convert this to a 404 response.
     await prisma.whiskey.delete({
       where: { id }
     });
