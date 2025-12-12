@@ -279,9 +279,11 @@ components:
           example: "Glen Example 12"
         distillery:
           type: string
+          nullable: true
           example: "Glen Example Distillery"
         region:
           type: string
+          nullable: true
           example: "Speyside"
         age:
           type: integer
@@ -294,6 +296,7 @@ components:
           example: 43
         size_ml:
           type: integer
+          nullable: true
           description: Bottle size in milliliters
           example: 700
         quantity:
@@ -306,6 +309,7 @@ components:
           example: "2024-08-01"
         priceCents:
           type: integer
+          nullable: true
           description: Price stored in cents to avoid floating point
           example: 4999
         notes:
