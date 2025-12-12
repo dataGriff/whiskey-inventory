@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import whiskeyRoutes from './api/whiskey.routes';
 import { errorHandler } from './middleware/errorHandler';
+import { logger } from './utils/logger';
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ app.use(errorHandler);
 // Only start server if not in test environment
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    logger.info(`Server running on http://localhost:${PORT}`);
   });
 }
 

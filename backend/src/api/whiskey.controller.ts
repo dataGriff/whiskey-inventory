@@ -2,7 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../db/prisma';
 import { ApiError } from '../middleware/errorHandler';
 import { Prisma } from '@prisma/client';
+import { transformWhiskeyForResponse, transformWhiskeysForResponse } from '../utils/transformers';
 
+/**
+ * Lists whiskeys with pagination, filtering, and sorting
+ * Supports query parameters: limit, offset, q, tag, region, min_abv, max_abv, sort
+ */
 export const listWhiskeys = async (
   req: Request,
   res: Response,
@@ -52,7 +57,7 @@ export const listWhiskeys = async (
       }
     }
 
-    // Execute queries
+    // Execute queries in parallel for better performance
     const [items, total] = await Promise.all([
       prisma.whiskey.findMany({
         where,
@@ -63,16 +68,8 @@ export const listWhiskeys = async (
       prisma.whiskey.count({ where })
     ]);
 
-    // Transform dates to ISO strings for consistency with OpenAPI
-    const transformedItems = items.map(item => ({
-      ...item,
-      purchaseDate: item.purchaseDate ? item.purchaseDate.toISOString().split('T')[0] : null,
-      createdAt: item.createdAt.toISOString(),
-      updatedAt: item.updatedAt.toISOString()
-    }));
-
     res.json({
-      items: transformedItems,
+      items: transformWhiskeysForResponse(items),
       meta: {
         total,
         limit,
@@ -84,6 +81,10 @@ export const listWhiskeys = async (
   }
 };
 
+/**
+ * Retrieves a single whiskey by ID
+ * Returns 404 if whiskey not found
+ */
 export const getWhiskey = async (
   req: Request,
   res: Response,
@@ -100,19 +101,16 @@ export const getWhiskey = async (
       throw new ApiError(404, 'NOT_FOUND', 'Whiskey not found');
     }
 
-    const transformed = {
-      ...whiskey,
-      purchaseDate: whiskey.purchaseDate ? whiskey.purchaseDate.toISOString().split('T')[0] : null,
-      createdAt: whiskey.createdAt.toISOString(),
-      updatedAt: whiskey.updatedAt.toISOString()
-    };
-
-    res.json(transformed);
+    res.json(transformWhiskeyForResponse(whiskey));
   } catch (error) {
     next(error);
   }
 };
 
+/**
+ * Creates a new whiskey entry
+ * Returns 201 with the created resource
+ */
 export const createWhiskey = async (
   req: Request,
   res: Response,
@@ -130,19 +128,16 @@ export const createWhiskey = async (
       data
     });
 
-    const transformed = {
-      ...whiskey,
-      purchaseDate: whiskey.purchaseDate ? whiskey.purchaseDate.toISOString().split('T')[0] : null,
-      createdAt: whiskey.createdAt.toISOString(),
-      updatedAt: whiskey.updatedAt.toISOString()
-    };
-
-    res.status(201).json(transformed);
+    res.status(201).json(transformWhiskeyForResponse(whiskey));
   } catch (error) {
     next(error);
   }
 };
 
+/**
+ * Replaces an entire whiskey entry (PUT)
+ * Returns 404 if whiskey not found
+ */
 export const replaceWhiskey = async (
   req: Request,
   res: Response,
@@ -152,35 +147,27 @@ export const replaceWhiskey = async (
     const { id } = req.params;
     const data = req.body;
 
-    // Check if whiskey exists
-    const existing = await prisma.whiskey.findUnique({ where: { id } });
-    if (!existing) {
-      throw new ApiError(404, 'NOT_FOUND', 'Whiskey not found');
-    }
-
     // Parse purchaseDate if provided
     if (data.purchaseDate) {
       data.purchaseDate = new Date(data.purchaseDate);
     }
 
+    // Prisma update will throw P2025 error if record not found
     const whiskey = await prisma.whiskey.update({
       where: { id },
       data
     });
 
-    const transformed = {
-      ...whiskey,
-      purchaseDate: whiskey.purchaseDate ? whiskey.purchaseDate.toISOString().split('T')[0] : null,
-      createdAt: whiskey.createdAt.toISOString(),
-      updatedAt: whiskey.updatedAt.toISOString()
-    };
-
-    res.json(transformed);
+    res.json(transformWhiskeyForResponse(whiskey));
   } catch (error) {
     next(error);
   }
 };
 
+/**
+ * Partially updates a whiskey entry (PATCH)
+ * Returns 404 if whiskey not found
+ */
 export const updateWhiskey = async (
   req: Request,
   res: Response,
@@ -190,35 +177,27 @@ export const updateWhiskey = async (
     const { id } = req.params;
     const data = req.body;
 
-    // Check if whiskey exists
-    const existing = await prisma.whiskey.findUnique({ where: { id } });
-    if (!existing) {
-      throw new ApiError(404, 'NOT_FOUND', 'Whiskey not found');
-    }
-
     // Parse purchaseDate if provided
     if (data.purchaseDate) {
       data.purchaseDate = new Date(data.purchaseDate);
     }
 
+    // Prisma update will throw P2025 error if record not found
     const whiskey = await prisma.whiskey.update({
       where: { id },
       data
     });
 
-    const transformed = {
-      ...whiskey,
-      purchaseDate: whiskey.purchaseDate ? whiskey.purchaseDate.toISOString().split('T')[0] : null,
-      createdAt: whiskey.createdAt.toISOString(),
-      updatedAt: whiskey.updatedAt.toISOString()
-    };
-
-    res.json(transformed);
+    res.json(transformWhiskeyForResponse(whiskey));
   } catch (error) {
     next(error);
   }
 };
 
+/**
+ * Deletes a whiskey entry
+ * Returns 204 on success, 404 if not found
+ */
 export const deleteWhiskey = async (
   req: Request,
   res: Response,
@@ -227,12 +206,7 @@ export const deleteWhiskey = async (
   try {
     const { id } = req.params;
 
-    // Check if whiskey exists
-    const existing = await prisma.whiskey.findUnique({ where: { id } });
-    if (!existing) {
-      throw new ApiError(404, 'NOT_FOUND', 'Whiskey not found');
-    }
-
+    // Prisma delete will throw P2025 error if record not found
     await prisma.whiskey.delete({
       where: { id }
     });
