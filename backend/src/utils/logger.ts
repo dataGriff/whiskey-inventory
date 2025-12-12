@@ -27,6 +27,7 @@ const shouldLog = (level: LogLevel): boolean => {
   return true;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const log = (level: LogLevel, message: string, ...args: any[]) => {
   if (!shouldLog(level)) {
     return;
@@ -48,8 +49,12 @@ const log = (level: LogLevel, message: string, ...args: any[]) => {
 };
 
 export const logger = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: (message: string, ...args: any[]) => log(LOG_LEVELS.ERROR, message, ...args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn: (message: string, ...args: any[]) => log(LOG_LEVELS.WARN, message, ...args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   info: (message: string, ...args: any[]) => log(LOG_LEVELS.INFO, message, ...args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug: (message: string, ...args: any[]) => log(LOG_LEVELS.DEBUG, message, ...args)
 };

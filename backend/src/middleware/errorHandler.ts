@@ -8,6 +8,7 @@ export class ApiError extends Error {
     public statusCode: number,
     public code: string,
     message: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public details?: any
   ) {
     super(message);
@@ -24,7 +25,7 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   // Handle custom API errors
   if (err instanceof ApiError) {
@@ -37,6 +38,7 @@ export const errorHandler = (
 
   // Handle Prisma-specific errors
   if (err.name === 'PrismaClientKnownRequestError') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const prismaError = err as any;
     if (prismaError.code === 'P2002') {
       return res.status(409).json({
