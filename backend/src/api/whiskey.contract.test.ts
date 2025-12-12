@@ -2,7 +2,6 @@ import request from 'supertest';
 import path from 'path';
 import app from '../index';
 import { cleanupDatabase, disconnectDatabase, prisma } from '../test-setup';
-// @ts-expect-error - jest-openapi types might not be perfect
 import jestOpenAPI from 'jest-openapi';
 
 // Load OpenAPI spec for validation
