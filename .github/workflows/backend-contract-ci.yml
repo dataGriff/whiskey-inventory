@@ -1,0 +1,127 @@
+name: Backend Contract CI
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - '.github/workflows/backend-contract-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+
+jobs:
+  backend-contract-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: whiskey_inventory_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Run database migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/whiskey_inventory_test?schema=public
+        run: npx prisma migrate deploy --schema=../prisma/schema.prisma
+
+      - name: Lint backend code
+        working-directory: backend
+        run: npm run lint
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: Run OpenAPI contract tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/whiskey_inventory_test?schema=public
+          NODE_ENV: test
+        run: npm run test:contract
+
+      - name: Run all backend tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/whiskey_inventory_test?schema=public
+          NODE_ENV: test
+        run: npm test
+
+      - name: Upload test coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
+          retention-days: 7
+
+  validate-openapi-compliance:
+    runs-on: ubuntu-latest
+    needs: backend-contract-tests
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral-cli@6.11.0
+
+      - name: Lint OpenAPI spec
+        run: spectral lint contracts/openapi.yaml --fail-severity=error
+
+      - name: Validate YAML structure
+        run: |
+          python -c "import sys, yaml; yaml.safe_load(open('contracts/openapi.yaml'))"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const message = `## ✅ Backend Contract Validation Passed
+            
+            All backend API responses have been validated against the OpenAPI contract specification:
+            - OpenAPI spec linting: ✅ Passed
+            - Contract tests: ✅ Passed
+            - Backend tests: ✅ Passed
+            
+            The backend implementation is fully compliant with the OpenAPI contract.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
